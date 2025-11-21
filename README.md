@@ -10,8 +10,7 @@ Pre-train a general-purpose ultrasound representation with our recipe, then fine
   <a href="#pre-training">Pre-training</a> •
   <a href="#downstream-tasks">Downstream Tasks</a> •
   <a href="#results">Results</a> •
-  <a href="#citation">Citation</a> •
-  <a href="#license">License</a>
+  <a href="#citation">Citation</a> 
 </p>
 
 <p align="center">
@@ -19,6 +18,7 @@ Pre-train a general-purpose ultrasound representation with our recipe, then fine
   <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-2.2-EE4C2C">
   <img alt="CUDA" src="https://img.shields.io/badge/CUDA-12.x-76B900">
   <img alt="OS" src="https://img.shields.io/badge/OS-Linux%20%7C%20WSL2-informational">
+  <img alt="License" src="https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg">
 </p>
 
 ---
@@ -271,7 +271,6 @@ Pre-trained `OpenUS` model can be easily adapted to specific downstream tasks by
 | OpenUS| VMamba-S|[TN3K](https://github.com/openmedlab/Awesome-Medical-Dataset/blob/main/resources/TN3K.md) |82.7±1.2 | 73.1±1.1 | [OpenUS]()|
 
 ---
-
 ## Citation
 
 If you find this repository helpful for your research, please consider citing our work:

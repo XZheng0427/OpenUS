@@ -210,6 +210,40 @@ python eval_segmentation.py
   --lr 0.001
 ```
 
+## Fine-tune in your custom dataset
+
+### 1) Classification
+
+```bash
+python eval_linear.py   
+    --arch vmamba_small   
+    --num_labels <.>                   
+    --dataset <Custom Dataset>          
+    --data_path <DATASET_ROOT>   
+    --pretrained_weights <Pre-trained_OpenUS_CKPT_PATH>   
+    --output_dir <OUTPUT_DIR>   
+    --log_name <RUN_NAME>   
+    --avgpool_patchtokens <.>   
+    --lr <.>   
+    --pretrained_vmamba True
+```
+
+### 2) Segmentation
+
+```bash
+python eval_segmentation.py   
+  --arch vmamba_small   
+  --dataset_name <Custom Dataset>                  
+  --data_root <DATA_ROOT>   
+  --data_root2 <OPTIONAL_SECOND_ROOT>   
+  --json_file <METADATA_JSON>   
+  --pretrained_vmamba True   
+  --pretrained_weights <Pre-trained_OpenUS_CKPT_PATH>   
+  --output_dir <OUTPUT_DIR>   
+  --log_name <RUN_NAME>   
+  --lr <.>
+```
+
 ---
 
 ## Results

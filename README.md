@@ -176,7 +176,9 @@ torchrun --nproc_per_node=4
         --epochs 151
 ```
 
-### Pre-training weights [OpenUS-S](https://drive.google.com/file/d/1UXXoQKWzB03m_tRlTh9rbdUciX1rAk8E/view?usp=sharing) 
+### Pre-training weights
+
+**OpenUS-S**: [Link](https://drive.google.com/file/d/1UXXoQKWzB03m_tRlTh9rbdUciX1rAk8E/view?usp=sharing)
 
 ## Downstream Tasks
 

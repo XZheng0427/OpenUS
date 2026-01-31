@@ -37,6 +37,12 @@ This repository contains the code for our paper:
 
 ---
 
+## Updates
+
+- **1.** Pre-trained weights are now available! 
+
+---
+
 ## Installation
 
 **Requirements**
@@ -170,7 +176,7 @@ torchrun --nproc_per_node=4
         --epochs 151
 ```
 
-### Pre-training weights will release soon...
+### Pre-training weights [OpenUS-S](https://drive.google.com/file/d/1UXXoQKWzB03m_tRlTh9rbdUciX1rAk8E/view?usp=sharing) 
 
 ## Downstream Tasks
 

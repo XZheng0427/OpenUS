@@ -1,7 +1,7 @@
 # OpenUS
 OpenUS: A Fully Open-Source Foundation Model for Ultrasound Image Analysis via Self-Adaptive Masked Contrastive Learning
 
-Pre-train a general-purpose ultrasound representation with our recipe, then fine‑tune or evaluate on classification, segmentation, landmark localization, LVEF regression, image enhancement, and fetal cardiac detection tasks with a few commands.
+Pre-train a general-purpose ultrasound representation with our recipe, then fine‑tune or evaluate on classification, segmentation, landmark localization, LVEF regression, image enhancement, and fetal cardiac detection tasks.
 
 <p align="center">
   <a href="#Overview">Overview</a> •

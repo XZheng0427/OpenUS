@@ -2,8 +2,18 @@ results/
 logs/
 eval_seg_output/
 eval_linear_output/
+outputs/
+OpenUS_datasets/
 pretrained/
 wandb/
+
+# Downstream task generated artifacts
+*_manifest_*.json
+enhance_holdout.json
+baselines.json
+test_per_patient.csv
+_prepared/
+*.pth
 
 # Python cache files
 __pycache__/

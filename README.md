@@ -1,7 +1,7 @@
 # OpenUS
 OpenUS: A Fully Open-Source Foundation Model for Ultrasound Image Analysis via Self-Adaptive Masked Contrastive Learning
 
-Pre-train a general-purpose ultrasound representation with our recipe, then fine‑tune or evaluate on classification and segmentation tasks with a few commands.
+Pre-train a general-purpose ultrasound representation with our recipe, then fine‑tune or evaluate on classification, segmentation, landmark localization, LVEF regression, image enhancement, and fetal cardiac detection tasks with a few commands.
 
 <p align="center">
   <a href="#Overview">Overview</a> •
@@ -33,7 +33,7 @@ This repository contains the code for our paper:
 
 - **Foundation pre-training** for ultrasound images using self‑adaptive masked contrastive learning.
 - **Plug‑and‑play backbones** (e.g., `vmamba_small`) with optional pretrained V‑Mamba weights.
-- **Ready‑to‑use evaluation** for **classification** (e.g., *Fetal Planes*, *BUSI*) and **segmentation** (e.g., *TN3K*, *BUSBRA*).
+- **Ready‑to‑use evaluation** for **classification** (e.g., *Fetal Planes*, *BUSI*), **segmentation** (e.g., *TN3K*, *BUSBRA*), and four additional downstream tasks from the US-DINO pipeline.
 
 ---
 
@@ -60,7 +60,14 @@ pip install torch==2.2 torchvision torchaudio triton pytest chardet yacs termcol
 
 # Optional V‑Mamba dependency if you plan to use vmamba_small
 pip install https://github.com/state-spaces/mamba/releases/download/v2.2.4/mamba_ssm-2.2.4+cu12torch2.2cxx11abiTRUE-cp310-cp310-linux_x86_64.whl
+
+# Extra downstream-task utilities
+pip install pyiqa clean-fid pandas openpyxl scikit-image
 ```
+
+Fetal cardiac detection uses the MMRotate/MMDetection stack. We recommend a
+separate `openus-mmrot` environment for `eval_cardiac_detection.py` and the
+`submit_cardiac_detection_*.sh` launchers.
 
 ---
 
@@ -85,6 +92,10 @@ Pass root paths via your launcher or configuration (see `--output_dir`, `--train
 | Classification | `busi` | `--dataset busi --num_labels 3 --data_path <DATASET_ROOT>` |
 | Segmentation | `TN3K` | `--dataset_name TN3K --data_root <ROOT> --data_root2 <ALT_ROOT> --json_file <META.json>` |
 | Segmentation | `BUSBRA` | `--dataset_name BUSBRA --data_root <ROOT> --json_file <META.json>` |
+| Landmark localization | `BrainBenchmark` | `python -m downstream_tasks.landmark.prepare_brainbench --data_root <ROOT> --out <MANIFEST.json>` |
+| LVEF regression | `CAMUS_2` | `python -m downstream_tasks.lvef.prepare_camus --data_root <ROOT> --out <MANIFEST.json>` |
+| Image enhancement | `USenhance` | `python -m downstream_tasks.enhance.prepare_enhance --data_root <ROOT> --seed <SEED> --out <MANIFEST.json> --holdout_out <HOLDOUT.json>` |
+| Fetal cardiac detection | `FOCUS` | `python -m downstream_tasks.cardiac_detection.prepare_focus --data_root <ROOT> --prepared_dir <PREPARED_ROOT>` |
 
 > **Tip**: Keep a consistent directory structure and use absolute paths for reproducibility.
 
@@ -218,6 +229,93 @@ python eval_segmentation.py
   --lr 0.001
 ```
 
+### 3) Fetal Brain Landmark Localization
+
+Prepare a BrainBenchmark manifest, then train the OpenUS/VMamba landmark head.
+
+```bash
+python -m downstream_tasks.landmark.prepare_brainbench \
+  --data_root <BRAINBENCH_ROOT> \
+  --out <LANDMARK_MANIFEST.json> \
+  --split_seed 0
+
+python eval_landmark.py \
+  --landmark_manifest <LANDMARK_MANIFEST.json> \
+  --images_root <BRAINBENCH_ROOT> \
+  --pretrained_vmamba_init pretrained/vmamba/vssm_small_0229_ckpt_epoch_222.pth \
+  --pretrained_weights <OPENUS_CKPT> \
+  --checkpoint_key teacher \
+  --head_type unet \
+  --skip_val True \
+  --output_dir <OUTPUT_DIR>
+```
+
+### 4) LVEF Regression
+
+Prepare patient-disjoint CAMUS manifests and run the four-frame CH2/CH4 ED+ES regression head.
+
+```bash
+python -m downstream_tasks.lvef.prepare_camus \
+  --data_root <CAMUS_2_ROOT> \
+  --out <CAMUS_MANIFEST.json> \
+  --split_seed 0
+
+python eval_lvef.py \
+  --camus_manifest <CAMUS_MANIFEST.json> \
+  --images_root <CAMUS_2_ROOT> \
+  --pretrained_vmamba_init pretrained/vmamba/vssm_small_0229_ckpt_epoch_222.pth \
+  --pretrained_weights <OPENUS_CKPT> \
+  --checkpoint_key teacher \
+  --output_dir <OUTPUT_DIR>
+```
+
+### 5) Image Enhancement
+
+The OpenUS enhancement recipe uses the EnlightenGAN training harness with the VMamba/OpenUS encoder selected by `--generator vmamba`.
+
+```bash
+python -m downstream_tasks.enhance.prepare_enhance \
+  --data_root <USENHANCE_ROOT> \
+  --seed 0 \
+  --out <ENHANCE_MANIFEST.json> \
+  --holdout_out <ENHANCE_HOLDOUT.json>
+
+python eval_enhance_enlightengan.py \
+  --generator vmamba \
+  --data_root <USENHANCE_ROOT> \
+  --manifest_path <ENHANCE_MANIFEST.json> \
+  --holdout_manifest <ENHANCE_HOLDOUT.json> \
+  --pretrained_vmamba_init pretrained/vmamba/vssm_small_0229_ckpt_epoch_222.pth \
+  --pretrained_weights <OPENUS_CKPT> \
+  --checkpoint_key teacher \
+  --freeze_encoder True \
+  --output_dir <OUTPUT_DIR>
+```
+
+For the 5-seed OpenUS/VMamba enhancement grid, use:
+
+```bash
+FREEZE_ENCODER=True IMAGE_SIZE=256 bash submit_enhance_elgan_vmamba_multiseed.sh
+```
+
+### 6) Fetal Cardiac Detection
+
+Prepare FOCUS into the DOTA-style layout and run the OpenUS/VMamba Rotated Faster R-CNN pipeline in an MMRotate environment.
+
+```bash
+python -m downstream_tasks.cardiac_detection.prepare_focus \
+  --data_root <FOCUS_ROOT> \
+  --prepared_dir <FOCUS_PREPARED_DIR>
+
+python eval_cardiac_detection.py \
+  --data_root <FOCUS_ROOT> \
+  --prepared_dir <FOCUS_PREPARED_DIR> \
+  --vmamba_imagenet_ckpt pretrained/vmamba/vssm_small_0229_ckpt_epoch_222.pth \
+  --pretrained_weights <OPENUS_CKPT> \
+  --checkpoint_key teacher \
+  --output_dir <OUTPUT_DIR>
+```
+
 ## Fine-tune in your custom dataset
 
 ### 1) Classification
@@ -277,6 +375,43 @@ Pre-trained `OpenUS` model can be easily adapted to specific downstream tasks by
 |-------|------------|------|--------|-------|-----------------|
 | OpenUS| VMamba-S|[BUS-BRA](https://github.com/wgomezf/BUS-BRA) |91.0±0.9 | 83.5±1.0  | [OpenUS]()|
 | OpenUS| VMamba-S|[TN3K](https://github.com/openmedlab/Awesome-Medical-Dataset/blob/main/resources/TN3K.md) |82.7±1.2 | 73.1±1.1 | [OpenUS]()|
+
+### Fetal cardiac detection task
+
+*Qualitative comparison of fetal cardiac structure detection on FOCUS. Rotated bounding boxes show thorax (blue) and heart (red); mIoU is shown per method.*
+
+![FetalCardiacDetection](figs/Fig_5_detection.png)
+
+| Model | Backbone | Dataset | mAP@0.5 | mAP@[0.5:0.95] | CTR-acc@0.05 | CTR-acc@0.10 |
+|-------|----------|---------|----------------|---------|--------------|--------------|
+| OpenUS | VMamba-S | FOCUS | 1.0 | 0.538±0.012 | 0.660±0.042 |0.916±0.026 |
+
+### Fetal brain landmark task
+
+*Qualitative comparison of fetal brain landmark localization on BrainBenchmark. Green points are ground truth and red points are predictions; SDR@10 is shown per method.*
+
+![FetalBrainLandmark](figs/Fig_6_landmark.png)
+
+| Model | Backbone | Dataset | MSE | SDR@2(%) | SDR@4(%) | SDR@10(%) |
+|-------|----------|---------|----------|----------|----------|-----------|
+| OpenUS | VMamba-S | BrainBenchmark | 9.8±3.5 | 22.1±1.1 | 44.7±1.9 | 76.3±5.4 |
+
+### LVEF regression task
+
+| Model | Backbone | Dataset | MAE(%) | RMSE(%) | R² |
+|-------|----------|---------|--------|---------|----|
+| OpenUS | VMamba-S | CAMUS | 6.71±0.61 | 8.65±0.66 | 0.41±0.03 |
+
+### Image enhancement task
+
+*Qualitative comparison of ultrasound image enhancement on USenhance: low-quality input, enhanced outputs, and high-quality ground truth.*
+
+![ImageEnhancement](figs/Fig_7_enhancement.png)
+
+| Model | Backbone | Dataset | NIQE↓ | BRISQUE↓ | PIQE↓ | FID↓ |
+|-------|----------|---------|-------|----------|-------|------|
+| OpenUS | VMamba-S + EnlightenGAN decoder | USenhance | 5.21±0.10 | 18.99±0.91 | 23.89±1.38 | 102.25±3.47 |
+
 
 ---
 ## Citation

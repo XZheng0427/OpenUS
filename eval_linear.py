@@ -80,7 +80,7 @@ def eval_linear(args):
         embed_dim = model.num_features
     elif args.arch == 'vmamba_small':
         if args.pretrained_vmamba:
-            model = Backbone_DINOv2_VSSM_2(pretrained='./pretrained/vmamba/vssm_small_0229_ckpt_epoch_222.pth')
+            model = Backbone_DINOv2_VSSM_2(pretrained='./OpenUS/pretrained/vmamba/vssm_small_0229_ckpt_epoch_222.pth')
             embed_dim = model.dims[-1]
         else:
             model = dinov2_vmamba_small(

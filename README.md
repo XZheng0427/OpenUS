@@ -40,7 +40,7 @@ This repository contains the code for our paper:
 ## Updates
 
 - **1.** Pre-trained weights are now available!
-- **2.** New downstream tasks!
+- **2.** New downstream tasks available!
 
 ---
 

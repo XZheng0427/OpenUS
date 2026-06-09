@@ -189,7 +189,12 @@ torchrun --nproc_per_node=4
 
 ### Pre-training weights
 
-**OpenUS-S**: [Link](https://drive.google.com/file/d/1UXXoQKWzB03m_tRlTh9rbdUciX1rAk8E/view?usp=sharing)
+**OpenUS-S**: [Link](https://drive.google.com/file/d/1UXXoQKWzB03m_tRlTh9rbdUciX1rAk8E/view?usp=sharing) 
+
+## Download the pre-trained VMamba weights and place them in the pretrained/vmamba directory:
+  - [VMamba_Tiny](https://drive.google.com/file/d/1YXzScYUW0cwX93kTE9Q0K0IPlzC6NNH6/view?usp=drive_link)
+  - [VMamba_Small](https://drive.google.com/file/d/1hCkUfGw-nn6-sXymJf-biqsoh9vU3MIK/view?usp=drive_link)
+  - [VMamba_Base](https://drive.google.com/file/d/1QOZsCG9JQsQZkz7tfuNVF2ZT7zEuUv4b/view?usp=drive_link)
 
 ## Downstream Tasks
 
